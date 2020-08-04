@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="fragments/head::head('Antiquity Market: Login')"></th:block>
+    <script src="/js/lockSubmitButton.js" defer></script>
+</head>
+<body>
+<div th:replace="fragments/menu::menu"></div>
+
+<div class="container">
+    <h2 class="text-center text-white">Login</h2>
+    <form id="form" th:action="@{/users/login}" th:method="POST"
+          style="margin-bottom: 10%" class="main-form mx-auto col-md-8 d-flex flex-column justify-content-center">
+
+        <th:block th:if="${success}">
+            <p th:text="${success}" class="d-flex justify-content-center alert alert-success"></p>
+        </th:block>
+        <p class="d-flex justify-content-center alert alert-info p-1 m-1"
+           th:each="user:${@userServiceImpl.getDefaultUsers()}"
+           th:text="|Default ${user} with credentals ${user}/${user}${user}.|"></p>
+
+        <div class="form-group">
+            <label for="username" class="text-white font-weight-bold">Username</label>
+            <input th:value="${username}" th:classappend="${error} ? 'border-danger':''" id="username" name="username"
+                   type="text" min="2" max="20"
+                   class="form-control"
+                   placeholder="Username"/>
+        </div>
+        <div class="form-group">
+            <label for="password" class="text-white font-weight-bold">Password</label>
+            <input id="password" th:classappend="${error} ? 'border-danger':''" name="password" type="password" min="4"
+                   max="10"
+                   class="form-control"
+                   placeholder="Password"/>
+        </div>
+        <p th:if="${error}" th:text="${error}" class="errors alert alert-danger"></p>
+        <p th:if="${param.logout}" class="errors alert alert-success">Logout successful.</p>
+        <div class="row">
+            <div class="col col-md-4">
+                <div class="button-holder d-flex">
+                    <input id="submit" type="submit" class="btn btn-info btn-lg" value="Login"/>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="container"></div>
+<footer th:replace="fragments/footer::footer"></footer>
+</body>
+</html>

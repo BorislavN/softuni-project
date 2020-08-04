@@ -1,0 +1,65 @@
+<div th:fragment="menu" xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec='http://www.thymeleaf.org/extras/spring-security'>
+
+    <nav class="navbar navbar-expand-lg bg-dark navbar-dark fixed-top">
+        <a class="navbar-brand" th:href="@{/}"><img src="/img/icon.png" class="logo" alt="picture"></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto col-12 "
+                th:classappend="${#authorization.expression('isAuthenticated()')?'justify-content-between':'justify-content-around'}">
+
+                <th:block sec:authorize="hasRole('USER')">
+                    <li class="nav-item" th:classappend="${#request.getServletPath() == '/users/offers'}? 'active'">
+                        <a class="nav-link" th:href="@{/offers/my}">My Offers</a>
+                    </li>
+                    <li class="nav-item" th:classappend="${#request.getServletPath() == '/users/collection'}? 'active'">
+                        <a class="nav-link" th:href="@{/users/collection}">Collection</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" th:href="@{/}" id="navbarDropdown" role="button"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            More Links
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" th:href="@{/users/profile}">Profile</a>
+                            <a class="dropdown-item" th:href="@{/notifications}">Notifications</a>
+                            <a class="dropdown-item" th:href="@{/items/add}">Add Item</a>
+                            <a class="dropdown-item" th:href="@{/users/deposit}">Deposit Funds</a>
+                            <a class="dropdown-item" th:href="@{/users/withdraw}">Withdraw Funds</a>
+                        </div>
+                    </li>
+                    </th:block>
+                    <li sec:authorize="hasRole('ADMIN')" class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" th:href="@{/}" id="adminDropdown" role="button"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Admin Links
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" th:href="@{/users/roles/edit}">Change Role</a>
+                        </div>
+                    </li>
+                <li class="nav-item" th:classappend="${#request.getServletPath() == '/offers'}? 'active'">
+                    <a class="nav-link" th:href="@{/offers}">Offers</a>
+                </li>
+                <li th:if="${#authorization.expression('isAuthenticated()')}" class="nav-item"
+                    th:classappend="${#request.getServletPath() == '/users/logout'}? 'active'">
+                    <form th:action="@{/users/logout}" th:method="POST">
+                        <input type="submit" style="border: none" class="nav-link bg-dark" value="Logout"/>
+                    </form>
+                </li>
+                <li th:unless="${#authorization.expression('isAuthenticated()')}" class="nav-item"
+                    th:classappend="${#request.getServletPath() == '/users/register'}? 'active'">
+                    <a class="nav-link" th:href="@{/users/register}">Register</a>
+                </li>
+                <li th:unless="${#authorization.expression('isAuthenticated()')}" class="nav-item"
+                    th:classappend="${#request.getServletPath() == '/users/login'}? 'active'">
+                    <a class="nav-link" th:href="@{/users/login}">Login</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div>
