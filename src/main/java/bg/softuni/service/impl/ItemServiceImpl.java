@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -179,7 +178,7 @@ public class ItemServiceImpl implements ItemService {
             throw new IllegalStateException("The item has invalid fields, check them and resubmit later.");
         }//Check binding model for errors
 
-        validateEnum(item.getCategory(), Category.class,"");//Check if enum value is valid
+        validateEnum(item.getCategory(), Category.class, "");//Check if enum value is valid
     }
 
     private Set<Photo> mapUrlsToPhotos(String username, ItemFormModel item, Item temp) {

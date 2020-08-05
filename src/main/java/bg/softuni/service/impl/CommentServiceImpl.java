@@ -70,7 +70,7 @@ public class CommentServiceImpl implements CommentService {
     @Scheduled(cron = "0 0 12 15 * ?")
     public void removeAllCommentsOlderThanAMonth() {
         this.repository.findAll().forEach(e -> {
-            long diff = Duration.between(e.getPostedOn(),LocalDateTime.now()).toDays();
+            long diff = Duration.between(e.getPostedOn(), LocalDateTime.now()).toDays();
 
             if (diff >= 28) {
                 this.repository.delete(e);

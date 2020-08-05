@@ -8,6 +8,10 @@ public class AddCommentModel {
     public AddCommentModel() {
     }
 
+    public AddCommentModel(String content) {
+        this.content = content;
+    }
+
     @Length(min = 1,max = 150,message = "Comment length should be between 1 and 150 characters!")
     public String getContent() {
         return content;
