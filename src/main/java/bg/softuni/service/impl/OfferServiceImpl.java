@@ -67,22 +67,6 @@ public class OfferServiceImpl implements OfferService {
     }
 
     @Override
-    public Page<OfferView> getOffers(int page) {
-        Page<Offer> tempPage = this.repository.findAll(PageRequest.of(page, this.PAGE_SIZE, this.SORT_DATA));
-        return this.getPage(tempPage, page, null);
-    }
-
-    @Override
-    public Page<OfferView> getOffersByCategory(int page, String category) {
-        EnumValidator.validateEnum(category, Category.class, "args");
-        Category catValue = Category.valueOf(category.toUpperCase());
-        Page<Offer> currPage = this.repository.getAllByItem_Category(
-                catValue, PageRequest.of(page, this.PAGE_SIZE, this.SORT_DATA));
-
-        return this.getPage(currPage, page, catValue);
-    }
-
-    @Override
     public DetailsView getDetails(String id) {
         Offer offer = this.repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Offer not found!"));
@@ -146,6 +130,25 @@ public class OfferServiceImpl implements OfferService {
         this.repository.delete(offer);
     }
 
+    //Integration
+    @Override
+    public Page<OfferView> getOffers(int page) {
+        Page<Offer> tempPage = this.repository.findAll(PageRequest.of(page, this.PAGE_SIZE, this.SORT_DATA));
+        return this.getPage(tempPage, page, null);
+    }
+
+    //Integration
+    @Override
+    public Page<OfferView> getOffersByCategory(int page, String category) {
+        EnumValidator.validateEnum(category, Category.class, "args");
+        Category catValue = Category.valueOf(category.toUpperCase());
+        Page<Offer> currPage = this.repository.getAllByItem_Category(
+                catValue, PageRequest.of(page, this.PAGE_SIZE, this.SORT_DATA));
+
+        return this.getPage(currPage, page, catValue);
+    }
+
+    //Integration
     private Page<OfferView> getPage(Page<Offer> temp, int page, Category category) {
         if (temp.getTotalPages() - 1 < page && page != 0) {
             if (category != null) {

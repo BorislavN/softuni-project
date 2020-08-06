@@ -18,7 +18,7 @@ public class OfferViewCounter implements HandlerInterceptor {
     }
 
     @Override
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView){
         String principal = (request.getUserPrincipal() == null) ? request.getSession().getId() : request.getUserPrincipal().getName();
         String view = (modelAndView == null) ? "" : modelAndView.getViewName();
         String url = request.getRequestURL().substring(21);
@@ -37,6 +37,7 @@ public class OfferViewCounter implements HandlerInterceptor {
     }
 
     public long deleteEntry(String key) {
-        return this.map.remove(key).size();
+        Set<String> out = this.map.remove(key);
+        return out != null ? out.size() : 0L;
     }
 }

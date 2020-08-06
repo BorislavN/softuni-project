@@ -3,6 +3,7 @@ package bg.softuni;
 import bg.softuni.model.entity.Item;
 import bg.softuni.model.entity.Offer;
 import bg.softuni.model.entity.User;
+import bg.softuni.model.service.ItemServiceModel;
 import bg.softuni.model.view.DetailsView;
 import bg.softuni.model.view.OfferView;
 import bg.softuni.repository.OfferRepository;
@@ -63,6 +64,7 @@ public class OfferServiceTest {
         this.offer = new Offer(this.temp, this.owner, BigDecimal.TEN);
         this.time = LocalDateTime.now();
         this.offer.setAddedOn(time);
+        this.offer.setId("ID");
     }
 
     @Test
@@ -132,5 +134,60 @@ public class OfferServiceTest {
 
         assertEquals("TEST", curr.getSeller().getUsername());
         assertEquals("ITEM", curr.getItem().getName());
+    }
+
+    @Test
+    public void testRemoveOfferWithInvalidId() {
+        when(repository.findById(anyString())).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> this.offerService.removeOffer("TEST", "TEST"));
+    }
+
+    @Test
+    public void testRemoveOfferWithInvalidUsername() {
+        when(repository.findById(anyString())).thenReturn(Optional.of(this.offer));
+        assertThrows(IllegalArgumentException.class, () -> this.offerService.removeOffer("NO SUCH USERNAME", "TEST"));
+    }
+
+    @Test
+    public void testRemoveOffer() {
+        ArgumentCaptor<Offer> captor = ArgumentCaptor.forClass(Offer.class);
+        this.offer.getItem().setForSale(false);
+        when(repository.findById(anyString())).thenReturn(Optional.of(this.offer));
+
+        this.offerService.removeOffer("TEST", "TEST");
+        verify(repository).delete(captor.capture());
+
+        assertEquals("TEST", captor.getValue().getSeller().getUsername());
+        assertEquals("ITEM", captor.getValue().getItem().getName());
+        assertFalse(captor.getValue().getItem().isForSale());
+    }
+
+    @Test
+    public void testBuyItemWithInvalidId() {
+        when(repository.findById(anyString())).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> this.offerService.buyItem("TEST", "TEST"));
+    }
+
+    @Test
+    public void testBuyItemWithInvalidUsername() {
+        when(repository.findById(anyString())).thenReturn(Optional.of(this.offer));
+        assertThrows(IllegalArgumentException.class, () -> this.offerService.buyItem("TEST", "TEST"));
+    }
+
+    @Test
+    public void testBuyItem() {
+        ArgumentCaptor<Offer> captor = ArgumentCaptor.forClass(Offer.class);
+        when(repository.findById(anyString())).thenReturn(Optional.of(this.offer));
+        when(itemService.buyItem(any(), anyString())).thenReturn(new ItemServiceModel("ITEM", "PERSON", false));
+
+        ItemServiceModel out = this.offerService.buyItem("PERSON", "TEST");
+        verify(repository).delete(captor.capture());
+
+        assertEquals("TEST", captor.getValue().getSeller().getUsername());
+        assertEquals("ITEM", captor.getValue().getItem().getName());
+
+        assertEquals("PERSON", out.getOwnerUsername());
+        assertEquals("ITEM", out.getName());
+        assertFalse(out.isForSale());
     }
 }
