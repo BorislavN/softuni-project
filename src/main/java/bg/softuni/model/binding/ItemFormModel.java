@@ -17,6 +17,14 @@ public class ItemFormModel {
     public ItemFormModel() {
     }
 
+    public ItemFormModel(String id, String name, String category, String description, List<MultipartFile> images) {
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.description = description;
+        this.images = images;
+    }
+
     public String getId() {
         return id;
     }
