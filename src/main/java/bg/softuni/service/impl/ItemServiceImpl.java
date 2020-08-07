@@ -122,6 +122,10 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemServiceModel buyItem(Offer offer, String username) {
+        if (offer.getSeller().getUsername().equals(username)){
+            throw new IllegalArgumentException("You can't biy tour own item!");
+        }
+
         User user = this.userService.getUserByUsername(username);
         this.userService.withdraw(username, new MoneyTransactionModel(offer.getPrice()));
         this.userService.deposit(offer.getSeller().getUsername(), new MoneyTransactionModel(offer.getPrice()));

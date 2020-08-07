@@ -2,6 +2,7 @@ package bg.softuni;
 
 import bg.softuni.model.binding.ItemFormModel;
 import bg.softuni.model.entity.Item;
+import bg.softuni.model.entity.Offer;
 import bg.softuni.model.entity.Photo;
 import bg.softuni.model.entity.User;
 import bg.softuni.model.enumeration.Category;
@@ -25,6 +26,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -48,6 +50,7 @@ public class ItemServiceTest {
     @Mock
     private MultipartFileHandler fileHandler;
     private User admin;
+    private User user;
     private Item item;
 
     @BeforeEach
@@ -56,14 +59,16 @@ public class ItemServiceTest {
         this.admin = new User();
         this.admin.setUsername("ADMIN");
         this.item = new Item();
+        this.user = new User();
+        this.user.setUsername("USER");
         this.item.setPhotos(Set.of(new Photo("unchanged", this.item)));
         this.item.setOwner(this.admin);
 
         File dummy = new File("uploads/dummy.jpg");
         if (!dummy.exists()) {
-           if( dummy.mkdirs()){
-               new File("uploads/dummy.jpg");
-           }
+            if (dummy.mkdirs()) {
+                new File("uploads/dummy.jpg");
+            }
         }
     }
 
@@ -300,5 +305,30 @@ public class ItemServiceTest {
         assertEquals("DELETE", captor.getValue().getName());
         assertEquals("/uploads/dummy.jpg", ((Photo) captor.getValue().getPhotos().toArray()[0]).getLocation());
         assertFalse(Files.exists(Path.of("uploads/dummy.jpg")));
+    }
+
+    @Test
+    public void buyItemWithSameSellerAsBuyer() {
+        Offer offer = new Offer(this.item, this.admin, BigDecimal.TEN);
+        offer.getItem().setForSale(true);
+        assertThrows(IllegalArgumentException.class, () -> itemService.buyItem(offer, "ADMIN"));
+    }
+
+    @Test
+    public void buyItem() {
+        ArgumentCaptor<Item> captor = ArgumentCaptor.forClass(Item.class);
+        Offer offer = new Offer(this.item, this.admin, BigDecimal.TEN);
+        offer.getItem().setForSale(true);
+        offer.getItem().setName("BUY");
+
+        when(userService.getUserByUsername(anyString())).thenReturn(this.user);
+        when(this.repository.saveAndFlush(any())).thenReturn(offer.getItem());
+
+        itemService.buyItem(offer, "USER");
+        verify(repository).saveAndFlush(captor.capture());
+
+        assertEquals("USER",captor.getValue().getOwner().getUsername());
+        assertEquals("BUY",captor.getValue().getName());
+        assertFalse(captor.getValue().isForSale());
     }
 }

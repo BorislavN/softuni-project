@@ -146,5 +146,4 @@ public class IntegrationTests {
                 .andExpect(view().name("redirect:/error"))
                 .andExpect(flash().attribute("flag", "test is not a valid value!"));
     }
-
 }
