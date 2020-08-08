@@ -18,7 +18,7 @@ public class OfferViewCounter implements HandlerInterceptor {
     }
 
     @Override
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView){
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) {
         String principal = (request.getUserPrincipal() == null) ? request.getSession().getId() : request.getUserPrincipal().getName();
         String view = (modelAndView == null) ? "" : modelAndView.getViewName();
         String url = request.getRequestURL().substring(21);
@@ -30,7 +30,8 @@ public class OfferViewCounter implements HandlerInterceptor {
     }
 
     public String getForUrl(String url) {
-        long value = this.map.get(url).size();
+        Set<String> entry = this.map.get(url);
+        long value = entry == null ? 0 : entry.size();
         String message = value == 1 ? "time" : "times";
 
         return String.format("viewed %d %s", value, message);
