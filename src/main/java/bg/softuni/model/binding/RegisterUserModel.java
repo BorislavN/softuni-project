@@ -21,6 +21,16 @@ public class RegisterUserModel {
     public RegisterUserModel() {
     }
 
+    public RegisterUserModel(String username, String password, String repeatPassword, String firstName, String lastName, String email, String gender) {
+        this.username = username;
+        this.password = password;
+        this.repeatPassword = repeatPassword;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.gender = gender;
+    }
+
     @Length(min = 3, max = 20, message = "Username must be between 3 and 20 characters!")
     public String getUsername() {
         return username;
