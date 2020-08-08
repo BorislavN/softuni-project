@@ -1,5 +1,7 @@
 package bg.softuni;
 
+import bg.softuni.model.binding.EditProfileModel;
+import bg.softuni.model.binding.EditRolesModel;
 import bg.softuni.model.binding.MoneyTransactionModel;
 import bg.softuni.model.binding.RegisterUserModel;
 import bg.softuni.model.entity.Item;
@@ -10,6 +12,7 @@ import bg.softuni.model.enumeration.Gender;
 import bg.softuni.model.service.NotificationServiceModel;
 import bg.softuni.model.service.UserServiceModel;
 import bg.softuni.model.view.CollectionItem;
+import bg.softuni.model.view.ProfileView;
 import bg.softuni.repository.UserRepository;
 import bg.softuni.service.impl.UserServiceImpl;
 import bg.softuni.service.interf.NotificationService;
@@ -25,12 +28,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.modelmapper.ModelMapper;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.io.File;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +47,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -71,6 +81,7 @@ public class UserServiceTest {
         this.admin.setPassword(encoder.encode("PASS"));
         this.admin.setEmail("admin@abv.bg");
         this.admin.setBalance(BigDecimal.ZERO);
+        this.admin.setProfilePicture("/uploads/profile.jpg");
 
         Role adminRole = new Role("ROLE_ADMIN");
         adminRole.setId("1");
@@ -78,6 +89,13 @@ public class UserServiceTest {
         this.userRole.setId("2");
 
         this.admin.setRoles(Set.of(adminRole, userRole));
+
+        File dummy = new File("uploads/profile.jpg");
+        if (!dummy.exists()) {
+            if (dummy.mkdirs()) {
+                new File("uploads/profile.jpg");
+            }
+        }
     }
 
     @Test
@@ -324,27 +342,141 @@ public class UserServiceTest {
 
     @Test
     public void testGetCollection() {
-        Item item1=new Item();
+        Item item1 = new Item();
         item1.setForSale(true);
         item1.setId("1");
         item1.setName("ONE");
         item1.setOwner(this.admin);
-        item1.setPhotos(Set.of(new Photo("PHOTO_ONE",item1)));
+        item1.setPhotos(Set.of(new Photo("PHOTO_ONE", item1)));
 
-        Item item2=new Item();
+        Item item2 = new Item();
         item2.setName("TWO");
         item2.setId("2");
         item2.setOwner(this.admin);
-        item2.setPhotos(Set.of(new Photo("PHOTO_TWO",item2)));
+        item2.setPhotos(Set.of(new Photo("PHOTO_TWO", item2)));
 
-        this.admin.setCollection(Set.of(item1,item2));
+        this.admin.setCollection(Set.of(item1, item2));
 
         when(repository.getByUsername(ADMIN_USERNAME)).thenReturn(Optional.of(this.admin));
 
         List<CollectionItem> out = this.userService.getCollection(ADMIN_USERNAME);
-        assertEquals("TWO",out.get(0).getName());
-        assertEquals("ONE",out.get(1).getName());
-        assertEquals("PHOTO_TWO",out.get(0).getLocations().get(0));
-        assertEquals("PHOTO_ONE",out.get(1).getLocations().get(0));
+        assertEquals("TWO", out.get(0).getName());
+        assertEquals("ONE", out.get(1).getName());
+        assertEquals("PHOTO_TWO", out.get(0).getLocations().get(0));
+        assertEquals("PHOTO_ONE", out.get(1).getLocations().get(0));
+    }
+
+    @Test
+    public void getProfileViewWithInvalidUsername() {
+        when(repository.getByUsername(NONEXISTENT_USERNAME)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> this.userService.getProfileView(NONEXISTENT_USERNAME));
+    }
+
+    @Test
+    public void getProfileView() {
+        LocalDateTime time = LocalDateTime.now();
+        String actualFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").format(time);
+        this.admin.setModifiedOn(time);
+
+        when(repository.getByUsername(ADMIN_USERNAME)).thenReturn(Optional.of(this.admin));
+        ProfileView out = this.userService.getProfileView(ADMIN_USERNAME);
+
+        assertEquals(actualFormat, out.getModifiedOn());
+        assertEquals(ADMIN_USERNAME, out.getUsername());
+    }
+
+    @Test
+    public void testUpdateProfileInfoWithWrongUser() {
+        when(repository.getByUsername(NONEXISTENT_USERNAME)).thenReturn(Optional.empty());
+        assertThrows(UsernameNotFoundException.class, () -> this.userService.updateProfileInfo(NONEXISTENT_USERNAME, new EditProfileModel()));
+    }
+
+    @Test
+    public void testUpdateProfileInfoWithInvalidModel() {
+        when(repository.getByUsername(ADMIN_USERNAME)).thenReturn(Optional.of(this.admin));
+        assertThrows(IllegalStateException.class, () -> this.userService.updateProfileInfo(ADMIN_USERNAME, new EditProfileModel("1", "2")));
+        assertThrows(IllegalStateException.class, () -> this.userService.updateProfileInfo(ADMIN_USERNAME, new EditProfileModel("ssssssssssssssssssssssssssssssssssssssss", "ssssssssssssssssssssssssssssssssssssssss")));
+    }
+
+    @Test
+    public void testUpdateProfileInfoWithEmptyFile() {
+        when(repository.getByUsername(ADMIN_USERNAME)).thenReturn(Optional.of(this.admin));
+        when(this.repository.saveAndFlush(any())).thenAnswer((a) -> {
+            User temp = a.getArgument(0);
+            temp.setId("SAVED");
+            return temp;
+        });
+
+        EditProfileModel edit = new EditProfileModel("EDITED", "EDITED TOO");
+        edit.setImages(new MockMultipartFile("name", "", "image/png", new byte[3]));
+        UserServiceModel out = this.userService.updateProfileInfo(ADMIN_USERNAME, edit);
+
+        assertEquals("SAVED", out.getId());
+        assertEquals("EDITED", out.getFirstName());
+        assertEquals("EDITED TOO", out.getLastName());
+        assertEquals("/uploads/profile.jpg", out.getProfilePicture());
+    }
+
+    @Test
+    public void testUpdateProfileInfoWithNewPicture() {
+        when(repository.getByUsername(ADMIN_USERNAME)).thenReturn(Optional.of(this.admin));
+        when(this.fileHandler.saveFile(anyString(), any())).thenReturn("/dick-pic.jpg");
+        when(this.repository.saveAndFlush(any())).thenAnswer((a) -> {
+            User temp = a.getArgument(0);
+            temp.setId("SAVED");
+            return temp;
+        });
+
+        EditProfileModel edit = new EditProfileModel("EDITED", "EDITED TOO");
+        edit.setImages(new MockMultipartFile("name", "dick-pic", "image/png", new byte[3]));
+        UserServiceModel out = this.userService.updateProfileInfo(ADMIN_USERNAME, edit);
+
+        assertEquals("SAVED", out.getId());
+        assertEquals("EDITED", out.getFirstName());
+        assertEquals("EDITED TOO", out.getLastName());
+        assertEquals("/dick-pic.jpg", out.getProfilePicture());
+        assertFalse(Files.exists(Path.of("uploads/profile.jpg")));
+    }
+
+    @Test
+    public void testChangeRolesWithInvalidUser() {
+        when(repository.getByUsername(NONEXISTENT_USERNAME)).thenReturn(Optional.empty());
+        assertThrows(UsernameNotFoundException.class, () -> this.userService.changeRoles(new EditRolesModel(NONEXISTENT_USERNAME)));
+    }
+
+    @Test
+    public void testChangeRolesWithInvalidModel() {
+        EditRolesModel model=new EditRolesModel(ADMIN_USERNAME);
+        model.getRoles().add("SEX");
+        model.getRoles().add("TEACHER");
+        model.getRoles().add("BATE");
+
+        when(repository.getByUsername(ADMIN_USERNAME)).thenReturn(Optional.of(this.admin));
+        assertThrows(IllegalStateException.class, () -> this.userService.changeRoles(new EditRolesModel(ADMIN_USERNAME)));
+        assertThrows(IllegalStateException.class, () -> this.userService.changeRoles(model));
+    }
+
+    @Test
+    public void testChangeRoles() {
+        when(repository.getByUsername(ADMIN_USERNAME)).thenReturn(Optional.of(this.admin));
+        when(this.roleService.getRolesByNames(any())).thenReturn(List.of(this.userRole));
+        ArgumentCaptor<String> textCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        when(this.repository.saveAndFlush(any())).thenAnswer((a) -> {
+            User temp = a.getArgument(0);
+            temp.setId("ROLES_CHANGED");
+            return temp;
+        });
+
+        EditRolesModel model = new EditRolesModel(ADMIN_USERNAME);
+        model.getRoles().add("USER");
+
+        UserServiceModel out = this.userService.changeRoles(model);
+        verify(this.notificationService).createNotification(userCaptor.capture(), textCaptor.capture());
+
+        assertEquals("ROLES_CHANGED", out.getId());
+        assertEquals("ADMIN", out.getUsername());
+        assertEquals("ROLES_CHANGED", userCaptor.getValue().getId());
+        assertEquals("You roles have been changed by an administrator - roles: [USER]", textCaptor.getValue());
     }
 }

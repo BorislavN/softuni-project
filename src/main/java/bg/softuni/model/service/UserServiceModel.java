@@ -13,6 +13,7 @@ public class UserServiceModel {
     private String email;
     private BigDecimal balance;
     private Gender gender;
+    private String profilePicture;
 
     public UserServiceModel() {
     }
@@ -79,5 +80,13 @@ public class UserServiceModel {
 
     public void setGender(Gender gender) {
         this.gender = gender;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
     }
 }

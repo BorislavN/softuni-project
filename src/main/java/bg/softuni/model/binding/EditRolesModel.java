@@ -3,6 +3,7 @@ package bg.softuni.model.binding;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Size;
+import java.util.ArrayList;
 import java.util.List;
 
 public class EditRolesModel {
@@ -10,6 +11,11 @@ public class EditRolesModel {
     private List<String> roles;
 
     public EditRolesModel() {
+    }
+
+    public EditRolesModel(String username) {
+        this.username = username;
+        this.roles = new ArrayList<>();
     }
 
     @Length(min = 2, max = 20, message = "Username should be between 2 and 20 symbols!")
