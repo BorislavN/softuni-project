@@ -160,7 +160,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ProfileView getProfileView(String username) {
-        User temp = this.repository.findByUsername(username);
+        User temp = this.getUserByUsername(username);
         ProfileView view = this.modelMapper.map(temp, ProfileView.class);
 
         view.setModifiedOn(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm").format(temp.getModifiedOn()));
