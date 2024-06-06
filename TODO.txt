@@ -1,8 +1,0 @@
-TO DO
-
-There is a better way to store photos. That way is Cloudinary. The setup is pretty easy.
-Another thing is Heroku - the setup is not that hard and this project can migrate pretty
-easy to using the free PostgreSQL provided by the platform, because my repositories don't
-have any custom queries.
-
-Maybe in the future I can implement those features and use this project in a job interview...
