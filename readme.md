@@ -7,7 +7,7 @@ Thymeleaf/Bootstrap for visualization and MySQL for storage.
 The project has some tests witten for it.
 
 The submitted images are stored locally in the "uploads" folder.
-Upon initialization a default users are crated.
+Upon initialization default users are crated.
 
 ## 2.Pages:
 - "Home" page
